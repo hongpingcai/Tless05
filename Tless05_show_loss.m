@@ -19,7 +19,7 @@ txt_log = fullfile(dir_DATA, 'Hongping/Tless05/caffenet-log/fix5_solver_lr001_w0
 plot_learning_curve(txt_log);axis([0 15000 0 1]); 
 title('lr:0.001,w:0.005,fix 5L');
 subplot(4,1,4);
-txt_log = fullfile(dir_DATA, 'Hongping/Tless05/caffenet-log/fix5_solver_lr001_w0005.log');
+txt_log = fullfile(dir_DATA, 'Hongping/Tless05/caffenet-log/fix5_solver_lr001_w0005_shuffle_test.log');
 plot_learning_curve(txt_log);axis([0 15000 0 1]); 
 title('lr:0.001,w:0.0005,fix 5L');
 fig_name = fullfile(dir_DATA,'Hongping/Tless05/caffenet-log/fix5_lr001.png');

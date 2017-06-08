@@ -14,9 +14,6 @@
 addpath('../Tless02');
 Tless02_init;
 
-dir_Tless05 = fullfile(dir_DATA,'Hongping/Tless05');
-
-
 cluster_method = 'kmeans';
 cluster_K = 15;
 feat_type = 'caffenet';
@@ -26,7 +23,7 @@ caffe_input_w = 227;
 caffe_input_h = 227;
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % change parameters below
-fix_layer = 2; 
+fix_layer = 5; 
 lr = 0.001;
 weight_decay = 0.0005;
 ite = 8000;
@@ -36,7 +33,7 @@ aa = num2str(lr);bb = num2str(weight_decay);
 str_para = ['lr' aa(3:end) '_w' bb(3:end)];
 be_show = 0;
 
-dir_test_shuffle = fullfile(dir_Tless05,['test_shuffle_ite' int2str(ite)]);
+dir_test_shuffle = fullfile(dir_Tless05,['test_shuffle_ite' int2str(ite)]);%%%%%%%%%%%%%%%%%
 if ~exist(dir_test_shuffle,'dir')
     mkdir(dir_test_shuffle)
 end;
@@ -54,7 +51,8 @@ fprintf(1,'SPTE1: generate the test features...\n');
 if ~exist(mat_test_feat,'file')
     net_prototxt = fullfile(dir_Tless05,'caffenet-prototxt','deploy.prototxt');
     net_caffemodel = fullfile(dir_Tless05,'caffenet-model',...
-            ['fix' int2str(fix_layer) '-caffenet_' str_para '_iter_' int2str(ite) '.caffemodel']);
+            ['fix' int2str(fix_layer) '-caffenet_' str_para '_iter_' int2str(ite) ...
+            '.caffemodel']);
     mat_mean = fullfile(dir_Tless02,'ilsvrc_2012_mean_227.mat');
     disp('** Generate the testing features....');
     caffe.set_mode_gpu();
@@ -82,10 +80,12 @@ if ~exist(mat_test_feat,'file')
     end;
     fprintf(1,'\n  Save features into %s\n',mat_test_feat);
     caffe.reset_all();
-    save(mat_test_feat,'test_feats');
+    fprintf(1,'Compute the distance matrix...\n');
+    dis = pdist2(test_feats,test_feats);
+    save(mat_test_feat,'test_feats','dis');
 else
     fprintf(1,'** Load the test features frm %s....\n',mat_test_feat);
-    load(mat_test_feat,'test_feats');
+    load(mat_test_feat,'test_feats','dis');
 end;
 
 %% STEP3: clustering
@@ -107,19 +107,43 @@ if ~exist(mat_cluster,'file')
     save(mat_cluster,'ids_cluster','D','centres_cluster','ids_centre');
 else
     fprintf(1,'** Load clustering file: %s ....\n',mat_cluster);
-    load(mat_cluster);
+    load(mat_cluster,'ids_cluster');
 end;
 
 %% STEP4: clustering performance
 fprintf(1,'STEP4: clustering performance(%s,fix_layer=%d)...\n',str_para,fix_layer);
-theta_group_purity = 0.8;
-[ACC] = eval_cluster1(ids_cluster, labels_shuffle);%
-[nmi_score] = nmi(ids_cluster,double(labels_shuffle));
-[rec,pre,tp,acc_fm,tp_fm] = eval_cluster2(ids_cluster, labels_shuffle, theta_group_purity);
+mat_result = fullfile(dir_test_shuffle,['results_fix' int2str(fix_layer) '_' cluster_method ...
+    '_' int2str(cluster_K) '_' str_para '.mat']);
+if ~exist(mat_result,'file')
+    theta_group_purity = 0.8;
+    labels = labels_shuffle';
+    [ACC] = eval_cluster1(ids_cluster, labels');%
+    [nmi_score] = nmi(ids_cluster,double(labels'));
+    [rec,pre,tp,acc_fm,tp_fm] = eval_cluster2(ids_cluster, labels, theta_group_purity);
+    loss_McClain = McClainIndexLossFrmDis(dis, labels);
+    txt_elev = fullfile(dir_Tless03,'test_shuffle',['test_with_elev.txt']);
+    if ~exist(txt_elev,'file')
+        error('txt_elev file does not exist. Run Tless05_loss_with_without_train.m first.');
+    else
+        [im_files, labels, elevs] = textread(txt_elev,'%s %d %d');
+    end;
+    [vec_diff_ele, vec_R,r] = eval_viewpoint_invariance(dis,labels,elevs);
+    save(mat_result,'ACC','nmi_score','rec','pre','tp','acc_fm','tp_fm','loss_McClain',...
+        'vec_diff_ele', 'vec_R','r');
+else
+    load(mat_result,'ACC','nmi_score','rec','pre','tp','acc_fm','tp_fm','loss_McClain',...
+        'vec_diff_ele', 'vec_R','r');
+end;
 fprintf(1,'** ACC: %.4f\n',ACC);
 fprintf(1,'** NMI: %.4f\n',nmi_score);
 fprintf(1,'** Obj-wise: rec: %.4f, pre: %.4f, tp:%d\n',rec,pre,tp);
 fprintf(1,'** Frm-wise: acc_fm: %.4f, tp_fm: %d\n', acc_fm,tp_fm);
+fprintf(1,'** McClainIndex Loss: %.4f\n',loss_McClain);
+fprintf(1,'** intra-inter dis ratio at elev-diff=50 is : %.2f\n',vec_R(6));
+
+
+
+
 %     
 %     new_centre_feats = test_feats(ids_centre,:);
 %     new_centre_ids = ids_centre;

@@ -26,10 +26,10 @@ caffe_input_w = 227;
 caffe_input_h = 227;
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % change parameters below
-fix_layer = 2; 
+fix_layer = 0; 
 lr = 0.001;
 weight_decay = 0.05;
-ite = 8000;
+ite = 2000;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 aa = num2str(lr);bb = num2str(weight_decay);

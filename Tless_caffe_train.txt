@@ -19,3 +19,6 @@ export PYTHONPATH=/space/hc16826/gitroot/caffe/python/:/media/deepthought/DATA/H
 ###
 export PYTHONPATH=/space/hc16826/gitroot/caffe/python/:/media/deepthought/DATA/Hongping/Codes/Tless02/:$PYTHONPATH
 ./build/tools/caffe train --gpu 1 --solver=/media/deepthought/DATA/Hongping/Tless05/caffenet-prototxt/fix0_solver_lr001_w0005.prototxt --weights=/media/deepthought/DATA/Hongping/model-caffenet/bvlc_reference_caffenet.caffemodel 2>&1 | tee /media/deepthought/DATA/Hongping/Tless05/caffenet-log/fix0_solver_lr001_w0005.log 
+
+export PYTHONPATH=/space/hc16826/gitroot/caffe/python/:/media/deepthought/DATA/Hongping/Codes/Tless02/:$PYTHONPATH
+./build/tools/caffe train --gpu 1 --solver=/media/deepthought/DATA/Hongping/Tless05/caffenet-prototxt/fix5_solver_lr001_w0005_shuffle_test.prototxt --weights=/media/deepthought/DATA/Hongping/model-caffenet/bvlc_reference_caffenet.caffemodel 2>&1 | tee /media/deepthought/DATA/Hongping/Tless05/caffenet-log/fix5_solver_lr001_w0005_shuffle_test.log 
