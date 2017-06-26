@@ -103,7 +103,7 @@ switch lower(train_dataset)
         lr = 0.001;
         weight_decay = 0.0005;
         ite = 300;%100;%2000;%8000;
-        dim = 128; %%%%%%
+        dim = 512; %%%%%%
         %
         %%%%%%%%%%%%%%%%%%%%%%%%%%
         feat_blob = 'fc7_tless';%'fc6';

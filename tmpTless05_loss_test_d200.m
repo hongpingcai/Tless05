@@ -26,7 +26,7 @@ caffe_input_w = 227;
 caffe_input_h = 227;
 be_show = 0;
 
-which_set = 'test';%'train';%%'val';%%%%%%%%%%%
+which_set ='test';% 'train';%%'val';%%%%%%%%%%%
 dir_output = fullfile(dir_Tless05,[which_set 'set']);
 if ~exist(dir_output,'dir');
     mkdir(dir_output);
@@ -102,8 +102,8 @@ switch lower(train_dataset)
         fix_layer = 5;
         lr = 0.001;
         weight_decay = 0.0005;
-        ite = 300;%100;%2000;%8000;
-        dim = 128; %%%%%%
+        ite = 200;%100;%2000;%8000;
+        dim = 512; %%%%%%
         %
         %%%%%%%%%%%%%%%%%%%%%%%%%%
         feat_blob = 'fc7_tless';%'fc6';

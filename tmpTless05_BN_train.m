@@ -1,8 +1,9 @@
 %% Added by Hongping Cai,23/05/2017
-% Tless05_loss_with_without_train.m
+% Tless05_BN_loss_with_without_train.m
 % Compute the features, clusters before and after training.
 % compare the clustering performance and the McClainIndex loss and
 % intra-inter distance ratio.
+% Using the Batch normalization caffemodel
 %
 %INPUT:
 % Tless01/train_val/train_with_elev.txt
@@ -10,9 +11,9 @@
 % Tless03/test_shuffle/test_with_elev.txt
 %
 %OUTPUT:
-% Tless05/trainset/*.mat
-% Tless05/valset/*.mat
-% Tless05/testset/*.mat
+% Tless05-BN/trainset/*.mat
+% Tless05-BN/valset/*.mat
+% Tless05-BN/testset/*.mat
 %
 
 %%
@@ -21,12 +22,14 @@ Tless02_init;
 cluster_method = 'kmeans';
 cluster_K = 15;
 feat_type = 'caffenet';
-train_dataset = 'tless05';%'imagenet';%'tless01';%%%%%%%%%
+train_dataset = 'imagenet';%'tless05';%'tless01';%%%%%%%%%
 caffe_input_w = 227; 
 caffe_input_h = 227;
 be_show = 0;
 
-which_set = 'test';%'train';%%'val';%%%%%%%%%%%
+dir_Tless05 = fullfile(dir_DATA,'Hongping/Tless05-BN');%%%%%%%%%%%%%%%
+
+which_set = 'train';%'test';%%'val';%%%%%%%%%%%
 dir_output = fullfile(dir_Tless05,[which_set 'set']);
 if ~exist(dir_output,'dir');
     mkdir(dir_output);
@@ -83,18 +86,18 @@ n_im = length(labels);
 %% STEP1: generate the training features
 switch lower(train_dataset)
     case 'tless01'
-        opt_split_trainval = 1;
-        net_prototxt = fullfile(dir_Tless01,'caffenet-prototxt','deploy.prototxt');
-        net_caffemodel = fullfile(dir_Tless01,'caffenet-model',...
-            ['m' int2str(opt_split_trainval) '_Tless-caffenet_iter_10000.caffemodel']);
-        feat_blob = 'fc7';        
-        str_para = [feat_type '_' feat_blob '_' train_dataset];
-        dim = 4096;
+%         opt_split_trainval = 1;
+%         net_prototxt = fullfile(dir_Tless01,'caffenet-prototxt','deploy.prototxt');
+%         net_caffemodel = fullfile(dir_Tless01,'caffenet-model',...
+%             ['m' int2str(opt_split_trainval) '_Tless-caffenet_iter_10000.caffemodel']);
+%         feat_blob = 'fc7';        
+%         str_para = [feat_type '_' feat_blob '_' train_dataset];
+%         dim = 4096;
     case 'imagenet'
-        net_prototxt = fullfile(dir_DATA,'Hongping/model-caffenet/deploy.prototxt');
-        net_caffemodel = fullfile(dir_DATA,'Hongping/model-caffenet/bvlc_reference_caffenet.caffemodel');
-        feat_blob = 'fc7';        
-        str_para = [feat_type '_' feat_blob '_' train_dataset];
+        net_prototxt = fullfile(dir_DATA,'Hongping/model-caffenet-BN/deploy.prototxt');
+        net_caffemodel = fullfile(dir_DATA,'Hongping/model-caffenet-BN/alexnet_cvgj_iter_320000.caffemodel');
+        feat_blob = 'fc7/bn';        
+        str_para = [feat_type '_' train_dataset];%'_' feat_blob 
         dim = 4096;
     case 'tless05'
         %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,7 +105,7 @@ switch lower(train_dataset)
         fix_layer = 5;
         lr = 0.001;
         weight_decay = 0.0005;
-        ite = 300;%100;%2000;%8000;
+        ite = 500;%100;%2000;%8000;
         dim = 128; %%%%%%
         %
         %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,7 +115,7 @@ switch lower(train_dataset)
         % str_para = ['fix' int2str(fix_layer) '_lr' aa(3:end) '_w' bb(3:end) ...
         %     '_ite' int2str(ite)];
         str_para = ['fix' int2str(fix_layer) '_d' int2str(dim) '_lr' aa(3:end) '_w' bb(3:end) ...
-            '_ite' int2str(ite)];  %%%%%%%%
+            '_ite' int2str(ite) '_dropout'];  %%%%%%%%
         net_prototxt = fullfile(dir_Tless05,'caffenet-prototxt',['deploy_d' int2str(dim) '.prototxt']);
         net_caffemodel = fullfile(dir_Tless05,'caffenet-model',...
             ['fix' int2str(fix_layer) '_d' int2str(dim) '_caffenet_' str_para_short '_iter_' int2str(ite) '.caffemodel']);
@@ -152,8 +155,13 @@ if ~exist(mat_feat,'file')
                 fprintf(1,'%d ',i);
             end;
             im = imread(im_files{i});
-            input_data = {prepare_image(im,caffe_input_w,caffe_input_h,mat_mean)};
-            scores = net.forward(input_data);
+            %input_data = {prepare_image(im,caffe_input_w,caffe_input_h,mat_mean)};
+            im_data = im(:, :, [3, 2, 1]);  % permute channels from RGB to BGR
+            im_data = permute(im_data, [2, 1, 3]);  % flip width and height
+            im_data = single(im_data);  % convert from uint8 to single
+            im_data = imresize(im_data, [caffe_input_w caffe_input_h], 'bilinear');  % resize im_data
+            
+            scores = net.forward({im_data});
             cur_feat = net.blobs(feat_blob).get_data();
             feats(i,:) = cur_feat';%%%%%%%%
         end;

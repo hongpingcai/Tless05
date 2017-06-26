@@ -102,8 +102,8 @@ switch lower(train_dataset)
         fix_layer = 5;
         lr = 0.001;
         weight_decay = 0.0005;
-        ite = 300;%100;%2000;%8000;
-        dim = 128; %%%%%%
+        ite = 500;%100;%2000;%8000;
+        dim = 4096; %%%%%%
         %
         %%%%%%%%%%%%%%%%%%%%%%%%%%
         feat_blob = 'fc7_tless';%'fc6';
@@ -112,7 +112,7 @@ switch lower(train_dataset)
         % str_para = ['fix' int2str(fix_layer) '_lr' aa(3:end) '_w' bb(3:end) ...
         %     '_ite' int2str(ite)];
         str_para = ['fix' int2str(fix_layer) '_d' int2str(dim) '_lr' aa(3:end) '_w' bb(3:end) ...
-            '_ite' int2str(ite)];  %%%%%%%%
+            '_ite' int2str(ite) '_dropout'];  %%%%%%%%
         net_prototxt = fullfile(dir_Tless05,'caffenet-prototxt',['deploy_d' int2str(dim) '.prototxt']);
         net_caffemodel = fullfile(dir_Tless05,'caffenet-model',...
             ['fix' int2str(fix_layer) '_d' int2str(dim) '_caffenet_' str_para_short '_iter_' int2str(ite) '.caffemodel']);
